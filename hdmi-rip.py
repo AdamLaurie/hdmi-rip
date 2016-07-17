@@ -23,6 +23,8 @@ import struct
 import binascii
 import time, datetime
 from optparse import OptionParser
+import wave
+
 
 MESSAGE = "5446367A600200000000000303010026000000000234C2".decode('hex')
 AUDIO_HEADER= "00555555555555555555555500000000".decode('hex')
@@ -31,11 +33,14 @@ exitvalue= os.EX_OK
 
 usage= "usage: %prog [options] <file prefix> [minutes]"
 parser= OptionParser(usage= usage)
+parser.add_option("-a", "--audio_rate", type="int", dest="audio_rate", default= 48000, help="audio data rate in Hz (48000)")
+parser.add_option("-c", "--audio_channels", type="int", dest="audio_channels", default= 2, help="audio channels (2)")
 parser.add_option("-l", "--local_ip", dest="local_ip", default= "0.0.0.0", help="use local IP address as source (0.0.0.0)")
 parser.add_option("-p", "--sender_port", type="int", dest="sender_port", default= 48689, help="set sender's UDP PORT (48689)")
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default= True, help="don't print status messages to stdout (False)")
 parser.add_option("-s", "--sender_ip", dest="sender_ip", default= "192.168.168.55", help="set sender's IP address (192.168.168.55)")
 parser.add_option("-S", "--strict", action="store_true", dest="strict", default= False, help="strict mode - abort recording if frames dropped")
+parser.add_option("-w", "--wave", action="store_true", dest="wave", default= False, help="save audio in .wav format")
 (options, args) = parser.parse_args()
 
 if not (len(args) == 1 or len(args) == 2):
@@ -49,8 +54,9 @@ def log(message):
 
 def signal_handler(signal, frame):
 	log('\nFlushing buffers...')
-	Audio.flush()
-	os.fsync(Audio.fileno())
+	if not options.wave:
+		Audio.flush()
+		os.fsync(Audio.fileno())
 	Audio.close()
 	log('Audio: %d frames, %d bytes (%d frames dropped)' % (Audio_Frames, Audio_Bytes, Audio_Dropped))
 	Video.flush()
@@ -99,8 +105,16 @@ sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 sender="000b78006001".decode("hex")
 Videostarted=0
-Audio= open(args[0] + "-audio.dat","w")
-log('Audio: %s-audio.dat' % args[0])
+
+if options.wave:
+	Audio=wave.open(args[0] + "-audio.wav","w")
+	Audio.setnchannels(options.audio_channels)
+	Audio.setsampwidth(4)
+	Audio.setframerate(options.audio_rate)
+	log('Audio: %s-audio.wav' % args[0])
+else:
+	Audio= open(args[0] + "-audio.dat","w")
+	log('Audio: %s-audio.dat' % args[0])
 Video= open(args[0] + "-video.dat","w")
 log('Video: %s-video.dat' % args[0])
 Video_Frames= 0
@@ -178,7 +192,12 @@ while True:
 		# audio
 		if (dest_port==2066) and Videostarted:
 			if data[:16] == AUDIO_HEADER:
-				Audio.write(data[16:])
+				if options.wave:
+					data= data[16:]
+					# write as little-endian
+					Audio.writeframesraw(''.join([data[i:i+4][::-1] for i in range(0, len(data), 4)]))
+				else:
+					Audio.write(data[16:])
 				Audio_Bytes += len(data[16:])
 				Audio_Frames += 1
 			else:
