@@ -118,3 +118,5 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   HDCP is stripped by the hardware. Why this is not a surprise: http://adamsblog.aperturelabs.com/2013/02/hdcp-is-dead-long-live-hdcp-peek-into.html
 
+  YMMV: the output quality appears to be quite dependant on the input format. I've seen 1080P rips that are almost indistinguishable from the original, and yet the 720P Big Buck Bunny rip above has noticeable artifacts which are introduced by the sender, not the 2nd stage transcoding.
+
