@@ -7,7 +7,7 @@ The hardware can be bought cheaply on ebay by searching for 'HDMI Extender 120m'
 
 ![LAN extender](extender.jpg)
 
-Make sure it says "LAN/TX" on the CAT5 socket, not just TX as there are some models that do not use IP, but only a straight cable connection. Also, make sure it is the V2.0 model, not V3.
+Make sure it says "LAN/TX" on the CAT5 socket, not just TX as there are some models that do not use IP, but only a straight cable connection. Also, make sure it is the V2.0 model, not V3. The receiver is not required so if you can find a TX only unit cheaper, all the better.
 
 Despite the cheapness of the device, the video output is very high quality. This is because it is effectively dumping a frame buffer direct from HDMI and is using the YUV 4:2:2 Chroma scheme so there is very little noticeable degredation. The audio, on the other hand, is always transcoded to raw PCM Stereo, so you will lose any surround sound etc.
 
