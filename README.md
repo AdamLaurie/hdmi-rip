@@ -27,6 +27,10 @@ Despite the cheapness of the device, the video output is very high quality. This
 
   Options:
     -h, --help            show this help message and exit
+    -a AUDIO_RATE, --audio_rate=AUDIO_RATE
+                          audio data rate in Hz (48000)
+    -c AUDIO_CHANNELS, --audio_channels=AUDIO_CHANNELS
+                          audio channels (2)
     -l LOCAL_IP, --local_ip=LOCAL_IP
                           use local IP address as source (0.0.0.0)
     -p SENDER_PORT, --sender_port=SENDER_PORT
@@ -35,6 +39,7 @@ Despite the cheapness of the device, the video output is very high quality. This
     -s SENDER_IP, --sender_ip=SENDER_IP
                           set sender's IP address (192.168.168.55)
     -S, --strict          strict mode - abort recording if frames dropped
+    -w, --wave            save audio in .wav format
 
 ```
 
