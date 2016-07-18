@@ -58,7 +58,7 @@ def signal_handler(signal, frame):
 		Audio.flush()
 		os.fsync(Audio.fileno())
 	Audio.close()
-	log('Audio: %d frames, %d bytes (%d frames dropped)' % (Audio_Frames, Audio_Bytes, Audio_Dropped))
+	log('Audio: %d frames, %d bytes (%d packets dropped)' % ((Audio_Bytes / 4) / options.audio_channels, Audio_Bytes, Audio_Dropped))
 	Video.flush()
 	os.fsync(Video.fileno())
 	Video.close()
@@ -120,7 +120,6 @@ log('Video: %s-video.dat' % args[0])
 Video_Frames= 0
 Video_Bytes= 0
 Video_Dropped= 0
-Audio_Frames= 0
 Audio_Bytes= 0
 Audio_Dropped= 0
 
@@ -130,7 +129,9 @@ part_prev= 0
 
 packet_started= False
 senderstarted= False
-outbuf= ''
+video_buf= ''
+audio_buf= ''
+audio_buf_frames= 0
 dropping= False
 
 # receive a packet
@@ -192,17 +193,11 @@ while True:
 		# audio
 		if (dest_port==2066) and Videostarted:
 			if data[:16] == AUDIO_HEADER:
-				if options.wave:
-					data= data[16:]
-					# write as little-endian
-					Audio.writeframesraw(''.join([data[i:i+4][::-1] for i in range(0, len(data), 4)]))
-				else:
-					Audio.write(data[16:])
-				Audio_Bytes += len(data[16:])
-				Audio_Frames += 1
+				audio_buf += data[16:]
+				audio_buf_frames += 1
 			else:
 				log('Audio frame dropped')
-				Audio_Dropped += 1
+				dropping= True
 				if options.strict:
 					log('Aborting due to audio frame drop!')
 					exitvalue= os.EX_DATAERR
@@ -226,16 +221,26 @@ while True:
 						end_time= record_time * 60 + start_time
 						log('Recording will stop automatically at: %s' % datetime.datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S'))
 				frame_prev= frame_n
-				Video.write(outbuf)
-				Video_Bytes += len(outbuf)
-				Video_Frames += 1
-				outbuf= ''
 				if dropping:
 					Video_Dropped += 1
+					Audio_Dropped += audio_buf_frames
 					if options.strict:
-						log('Aborting due to video frame drop!')
+						log('Aborting due to frame drop!')
 						exitvalue= os.EX_DATAERR
 						os.kill(os.getpid(), signal.SIGINT)
+				else:
+					Video_Frames += 1
+					Video.write(video_buf)
+					Video_Bytes += len(video_buf)
+					if options.wave:
+						# write as little-endian
+						Audio.writeframesraw(''.join([audio_buf[i:i+4][::-1] for i in range(0, len(audio_buf), 4)]))
+					else:
+						Audio.write(audio_buf)
+					Audio_Bytes += len(audio_buf)
+				video_buf= ''
+				audio_buf_frames= 0
+				audio_buf= ''
 				dropping= False
 				if end_time and time.time() >= end_time:
 					log("Time's up!")
@@ -244,14 +249,12 @@ while True:
 				if not frame_prev == frame_n:
 					log('Video dropped frame % d' % frame_n)
 					frame_prev= frame_n
-					outbuf= ''
 					dropping= True
 				if not part_prev + 1 == part:
 					log('Video dropped part %d of frame %d' % (part, frame_n))
-					outbuf= ''
 					dropping= True
 			if Videostarted and not dropping:
-				outbuf += data[4:]
+				video_buf += data[4:]
 			part_prev= part
     		keepalive()
 
