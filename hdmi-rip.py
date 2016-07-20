@@ -35,12 +35,16 @@ usage= "usage: %prog [options] <file prefix> [minutes]"
 parser= OptionParser(usage= usage)
 parser.add_option("-a", "--audio_rate", type="int", dest="audio_rate", default= 48000, help="audio data rate in Hz (48000)")
 parser.add_option("-c", "--audio_channels", type="int", dest="audio_channels", default= 2, help="audio channels (2)")
+parser.add_option("-f", "--frame_rate", type="float", dest="frame_rate", default= 29.97, help="video frame rate (29.97)")
+parser.add_option("-H", "--height", type="int", dest="height", default= 540, help="monitor window height (540)")
 parser.add_option("-l", "--local_ip", dest="local_ip", default= "0.0.0.0", help="use local IP address as source (0.0.0.0)")
+parser.add_option("-n", "--no_monitor", action="store_false", dest="monitor", default= True, help="do not monitor video in pop-up window (False)")
 parser.add_option("-p", "--sender_port", type="int", dest="sender_port", default= 48689, help="set sender's UDP PORT (48689)")
-parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default= True, help="don't print status messages to stdout (False)")
+parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default= False, help="do not print status messages to stdout (False)")
 parser.add_option("-s", "--sender_ip", dest="sender_ip", default= "192.168.168.55", help="set sender's IP address (192.168.168.55)")
 parser.add_option("-S", "--strict", action="store_true", dest="strict", default= False, help="strict mode - abort recording if frames dropped")
 parser.add_option("-w", "--wave", action="store_true", dest="wave", default= False, help="save audio in .wav format")
+parser.add_option("-W", "--width", type="int", dest="width", default= 960, help="monitor window width (960)")
 (options, args) = parser.parse_args()
 
 if not (len(args) == 1 or len(args) == 2):
@@ -48,11 +52,13 @@ if not (len(args) == 1 or len(args) == 2):
 	exit(0)
 
 def log(message):
-	if not options.verbose:
+	if options.quiet:
 		return
 	print message
 
 def signal_handler(signal, frame):
+	if options.monitor:
+		pipeline.send_event(gst.Event.new_eos())
 	log('\nFlushing buffers...')
 	if not options.wave:
 		Audio.flush()
@@ -72,6 +78,24 @@ def keepalive():
 def eth_addr (a) :
   b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
   return b
+
+def newpipe():
+	pipeline= gst.parse_launch('appsrc name=audio_source emit-signals=false is-live=true ! queue leaky=downstream ! audio/x-raw,format=S32BE,channels=%d,rate=%d ! autoaudiosink appsrc name=video_source emit-signals=false is-live=true ! queue leaky=downstream ! image/jpeg,framerate=%d/100 ! jpegparse ! jpegdec ! videoconvert ! videoscale ! video/x-raw,width=%d,height=%d ! autovideosink' % (options.audio_channels, options.audio_rate, options.frame_rate * 100, options.width, options.height))
+	audio_source= pipeline.get_by_name("audio_source")
+	video_source= pipeline.get_by_name("video_source")
+	return pipeline, audio_source, video_source
+
+# launch monitor
+if options.monitor:
+	import gi
+	gi.require_version('Gst', '1.0')
+	from gi.repository import GObject,Gtk
+	from gi.repository import Gst as gst
+
+	GObject.threads_init()
+	gst.init()
+	pipeline, audio_source, video_source= newpipe()
+	pipeline.set_state(gst.State.PLAYING)
 
 log("UDP target IP: %s" % options.sender_ip)
 log("UDP keepalive port: %d" % options.sender_port)
@@ -107,16 +131,19 @@ sender="000b78006001".decode("hex")
 Videostarted=0
 
 if options.wave:
-	Audio=wave.open(args[0] + "-audio.wav","w")
+	audiofile= args[0] + "-audio.wav"
+	Audio=wave.open(audiofile,"w")
 	Audio.setnchannels(options.audio_channels)
 	Audio.setsampwidth(4)
 	Audio.setframerate(options.audio_rate)
-	log('Audio: %s-audio.wav' % args[0])
+	log('Audio: %s' % audiofile)
 else:
-	Audio= open(args[0] + "-audio.dat","w")
-	log('Audio: %s-audio.dat' % args[0])
-Video= open(args[0] + "-video.dat","w")
-log('Video: %s-video.dat' % args[0])
+	audiofile= args[0] + "-audio.dat"
+	Audio= open(audiofile,"w")
+	log('Audio: %s' % audiofile)
+videofile= args[0] + "-video.dat"
+Video= open(videofile,"w")
+log('Video: %s' % videofile)
 Video_Frames= 0
 Video_Bytes= 0
 Video_Dropped= 0
@@ -198,6 +225,8 @@ while True:
 			else:
 				log('Audio frame dropped')
 				dropping= True
+				if options.monitor:
+					pipeline.set_state(gst.State.PAUSED)
 				if options.strict:
 					log('Aborting due to audio frame drop!')
 					exitvalue= os.EX_DATAERR
@@ -228,10 +257,20 @@ while True:
 						log('Aborting due to frame drop!')
 						exitvalue= os.EX_DATAERR
 						os.kill(os.getpid(), signal.SIGINT)
+					if options.monitor:
+						pipeline.set_state(gst.State.READY)
 				else:
 					Video_Frames += 1
 					Video.write(video_buf)
 					Video_Bytes += len(video_buf)
+					if options.monitor:
+						buf= gst.Buffer.new_allocate(None, len(video_buf), None)
+						buf.fill(offset=0, src=video_buf)
+						video_source.emit("push-buffer", buf)
+						buf= gst.Buffer.new_allocate(None, len(audio_buf), None)
+						buf.fill(offset=0, src=audio_buf)
+						audio_source.emit("push-buffer", buf)
+						pipeline.set_state(gst.State.PLAYING)
 					if options.wave:
 						# write as little-endian
 						Audio.writeframesraw(''.join([audio_buf[i:i+4][::-1] for i in range(0, len(audio_buf), 4)]))
@@ -250,9 +289,13 @@ while True:
 					log('Video dropped frame % d' % frame_n)
 					frame_prev= frame_n
 					dropping= True
+					if options.monitor:
+						pipeline.set_state(gst.State.PAUSED)
 				if not part_prev + 1 == part:
 					log('Video dropped part %d of frame %d' % (part, frame_n))
 					dropping= True
+					if options.monitor:
+						pipeline.set_state(gst.State.PAUSED)
 			if Videostarted and not dropping:
 				video_buf += data[4:]
 			part_prev= part
