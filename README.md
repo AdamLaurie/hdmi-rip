@@ -102,9 +102,9 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   Seemingly unrelated actions like heavy load from other processes or even screensavers can cause packet loss.
 
-  You may get a better soundtrack by switching your source to Stereo/PCM instead of allowing the transmitter to downscale.
-
   Adding a dual output HDMI splitter will allow you to monitor the source while setting up for recording. It also prevents auto-switching of HDMI settings sometimes caused by switching cables.
+
+  You may get a better soundtrack by switching your source to Stereo/PCM instead of allowing the transmitter to downscale (if you use a home-theater amp, you'll need to configure the amp instead and only send Stereo/PCM audio to the TV so you can tap that output with the splitter and capture from any source).
 
 ##Further development you could help with:
 
@@ -132,3 +132,14 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   YMMV: the output quality appears to be quite dependant on the input format. I've seen 1080P rips that are almost indistinguishable from the original, and yet the 720P Big Buck Bunny rip above has noticeable artifacts which are introduced by the sender, not the 2nd stage transcoding.
 
+##Copyrighted material
+
+  Where would we be without the usual waffle about copyright?
+
+  In the UK we have a thing called "Time-shifting", the details of which can be viewed here:
+
+    https://www.gov.uk/guidance/exceptions-to-copyright
+
+  In my view, this gives me the right to record anything and everything as long as I don't re-distribute it and only use it within my own houeshold/family non-commercially. However, I'm not a lawyer so take your own advice and bear in mind that kittens, unicorns and/or other mythical creatures may be harmed if you do not respect Copyright in both letter and spirit, and you may make the baby Jesus cry.
+
+  For clarity: this code is published for the sole purpose of legally recording content that has had NotVeryGood(tm) copy-protection applied to it. Please do not abuse that facility, and enjoy your recordings in the comfort and safety of your own home(s).
