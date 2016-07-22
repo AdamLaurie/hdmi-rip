@@ -120,9 +120,9 @@ You will need to run as root to be able create the appropriate network sockets, 
 
 ##Notes:
 
-  Video frames are buffered and discarded if any part of the frame is lost or received out of sequence. This is safe to do as the data is in MJPEG format so every frame is a complete image, and loss of one frame every now and then will not be noticeable. The same cannot be said for audio, and currently no attempt is made to sanitise the audio.
+  Video frames are buffered and discarded if any part of the frame is lost or received out of sequence. This is safe to do as the data is in MJPEG format so every frame is a complete image, and loss of one frame every now and then will not be noticeable. The same cannot be said for audio as although it is discarded in the same way (and also during video packet loss to maintain sync) the effect is definitely more noticeable.
 
-  The audio track is currently not tagged with its data rate, so you may need to experiment to decide what it is. The only format I've seen so far is 48KHz which gives the above video framerates for transcoding. If your soundtrack goes out of sync during playback then you've probably used the wrong one (despite being in the UK, a lot of streaming services are actually transmitted with NTSC framerates).
+  The audio track is currently not tagged with its data rate, so you may need to experiment to decide what it is. The only format I've seen so far is 48KHz which gives the above video framerates for transcoding. If your soundtrack in the monitor window goes out of sync then you've probably used the wrong one (despite being in the UK, a lot of streaming services are actually transmitted with NTSC framerates). Any changes you make to the monitoring settings will have to be re-applied during transcoding as the output files are still the original raw stream.
 
   HDCP is stripped by the hardware. Why this is not a surprise: http://adamsblog.aperturelabs.com/2013/02/hdcp-is-dead-long-live-hdcp-peek-into.html
 
