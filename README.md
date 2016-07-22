@@ -136,9 +136,7 @@ You will need to run as root to be able create the appropriate network sockets, 
 
   Where would we be without the usual waffle about copyright?
 
-  In the UK we have a thing called "Time-shifting", the details of which can be viewed here:
-
-     <a href="https://www.gov.uk/guidance/exceptions-to-copyright" target="_blank">https://www.gov.uk/guidance/exceptions-to-copyright</a>
+  In the UK we have a thing called "Time-shifting", the details of which can be viewed here: https://www.gov.uk/guidance/exceptions-to-copyright
 
   In my view, this gives me the right to record anything and everything as long as I don't re-distribute it and only use it within my own houeshold/family non-commercially. However, I'm not a lawyer so take your own advice and bear in mind that kittens, unicorns and/or other mythical creatures may be harmed if you do not respect Copyright in both letter and spirit, and you may make the baby Jesus cry.
 
