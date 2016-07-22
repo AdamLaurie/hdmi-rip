@@ -108,11 +108,7 @@ You will need to run as root to be able create the appropriate network sockets, 
 
 ##Further development you could help with:
 
-  - Add gstreamer pipelines for monitoring/streaming.
-
   - Add support for other senders.
-
-  - Sanitise audio? (see below).
 
 ##Credits:
 
