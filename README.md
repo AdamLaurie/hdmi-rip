@@ -35,6 +35,7 @@ Despite the cheapness of the device, the video output is very high quality. This
                           video frame rate (29.97)
     -H HEIGHT, --height=HEIGHT
                           monitor window height (540)
+    -k, --keyboard        start/stop recording under keyboard control (False)
     -l LOCAL_IP, --local_ip=LOCAL_IP
                           use local IP address as source (0.0.0.0)
     -n, --no_monitor      do not monitor video in pop-up window (False)
@@ -44,7 +45,8 @@ Despite the cheapness of the device, the video output is very high quality. This
     -s SENDER_IP, --sender_ip=SENDER_IP
                           set sender's IP address (192.168.168.55)
     -S, --strict          strict mode - abort recording if frames dropped
-    -w, --wave            save audio in .wav format
+                          (False)
+    -w, --wave            save audio in .wav format (False)
     -W WIDTH, --width=WIDTH
                           monitor window width (960)
 
@@ -55,6 +57,12 @@ You will need to run as root to be able create the appropriate network sockets, 
 ##Example:
 
 ```
+
+  sudo ifconfig eth0:1 inet 192.168.168.1
+
+  if direct connection:
+
+     sudo route add default gw 192.168.168.1 
 
   sudo hdmi-rip.py /tmp/dummy 20
 
